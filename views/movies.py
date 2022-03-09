@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, abort
 from flask_restx import Resource, Namespace
 from setup_db import db
 from models import Movie, MovieSchema
@@ -29,14 +29,17 @@ class MoviesView(Resource):
         new_movie = Movie(**data)
         with db.session.begin():
             db.session.add(new_movie)
-        return "", 201
+        return "", 201, {'Location': new_movie.id}
 
 
 @movie_ns.route('/<int:bid>')
 class MovieView(Resource):
     def get(self, bid):
         movie = db.session.query(Movie).get(bid)
+        if not movie:
+            abort(404)
         return movie_schema.dump(movie), 200
+
 
     def put(self, bid):
         movie = db.session.query(Movie).get(bid)
